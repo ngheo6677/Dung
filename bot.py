@@ -15,7 +15,7 @@ def run():
 Thread(target=run).start()
 
 # ====== CẤU HÌNH ======
-TOKEN = "DÁN_TOKEN_BOT_VÀO_ĐÂY"
+TOKEN = "MTM5MzA2MTQwMDI4MDE3MDU0Nw.Gdj3l6.p9pNvH2FH0Kj6U-G4oewkIoLjh8RhI2xD_Gheg"
 KÊNH_HỢP_LỆ = "keyshop"
 GIÁ_KEY = 100000
 ĐIỂM_HÀNG_NGÀY = 500
