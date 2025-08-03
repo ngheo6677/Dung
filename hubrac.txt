@@ -1,0 +1,634 @@
+repeat task.wait() until game:IsLoaded()
+task.wait(1)
+
+-- Intro
+loadstring(game:HttpGet("https://raw.githubusercontent.com/newbie0z-lol/intro/refs/heads/main/Protected_5021807968980637.lua"))()
+task.wait(9)
+
+-- SERVICES
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local player = game.Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local VIM = game:GetService("VirtualInputManager")
+local Rep = game:GetService("ReplicatedStorage")
+local WS = Workspace
+
+-- Load Fluent UI
+local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/LongThanhTz12/GUI-LIBARY-SCRIPT/refs/heads/main/guilibaryscript"))()
+
+-- Create Main Window
+local Window = Fluent:CreateWindow({
+    Title = "Rez Hub 💀 | Link Discord: https://discord.gg/J3pZMNdu",
+    SubTitle = "by rez",
+    TabWidth = 160,
+    Theme = "Dark",
+    Acrylic = false,
+    Size = UDim2.fromOffset(500, 320),
+    MinimizeKey = Enum.KeyCode.F1
+})
+
+-- Tab --
+local Tabs = {
+    Info = Window:AddTab({ Title = "Tab Info", Icon = "info" }),
+    Farming = Window:AddTab({ Title = "Tab Farm Lv", Icon = "leaf" }),
+    Setting = Window:AddTab({ Title = "Tab Setting", Icon = "settings" }),
+    ChoiDo = Window:AddTab({ Title = "Tab Chơi Đồ", Icon = "rocket" }),
+    Pvp = Window:AddTab({ Title = "Tab PvP", Icon = "sword" }),
+    FarmTien = Window:AddTab({ Title = "Farm Tiền", Icon = "axe" })
+}
+local FarmWoodTab = Tabs.FarmTien
+
+-- Tab Info
+local function createLinkButton(tab, title, url)
+    tab:AddButton({
+        Title = title,
+        Description = "Nhấn để sao chép link",
+        Callback = function()
+            setclipboard(url)
+            Fluent:Notify({
+                Title = "✅ Đã sao chép!",
+                Content = title .. " đã được sao chép vào clipboard.",
+                Duration = 3
+            })
+        end
+    })
+end
+
+Tabs.Info:AddParagraph({
+    Title = "⚠️ LƯU Ý",
+    Content = "Nhấn phím F1 để ẩn / hiện giao diện Fluent UI.",
+})
+
+createLinkButton(Tabs.Info, "📎 Discord", "https://discord.gg/J3pZMNdu")
+createLinkButton(Tabs.Info, "📎 Youtube", "https://www.youtube.com/@changbeomientay0")
+createLinkButton(Tabs.Info, "📎 Tiktok", "https://www.tiktok.com/@nguyndiz")
+createLinkButton(Tabs.Info, "📎 Donate", "https://create.roblox.com/dashboard/creations/experiences/6821163566/passes/1268730242/overview")
+
+-- Tab Farming
+local a = Tabs.Farming:AddButton({
+	Title = "Chọn Vũ Khí",
+	Description = "Vũ Khí Hiện Tại : None",
+	Callback = function()
+		local weaponButtons = {}
+		
+		for i, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+			table.insert(weaponButtons, {
+				Title = v.Name,
+				Callback = function()
+					AttackWeapon = v.Name
+					print("Vũ khí đã chọn: " .. v.Name)
+				end
+			})
+		end
+
+		-- Thêm nút thoát
+		table.insert(weaponButtons, {
+			Title = "❌ Thoát",
+			Callback = function()
+				print("Đã thoát chọn vũ khí.")
+			end
+		})
+
+		Window:Dialog({
+			Title = "Chọn Vũ Khí",
+			Content = "Chọn một vũ khí:",
+			Buttons = weaponButtons
+		})
+	end
+})
+
+spawn(function()
+	while wait(1) do
+		if AttackWeapon then
+			a:SetDesc("Vũ Khí Hiện Tại : " .. AttackWeapon)
+		end
+	end
+end)
+
+
+-- Toggle AutoFarm Giang Ho 1 & 2
+
+local Toggle2 = Tabs.Farming:AddToggle("AutoGiangHo2", {
+    Title = "Auto Farm Boss",
+    Default = false
+})
+
+Toggle2:OnChanged(function(Value)
+    AutoFarmGiangho2 = Value
+    if Value then
+        pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/newbiezlol/boss/refs/heads/main/boss.txt"))()
+        end)
+    end
+end)
+
+
+local UIS = game:GetService("UserInputService")
+local RepStorage = game:GetService("ReplicatedStorage")
+local KnitInventoryRE = RepStorage:WaitForChild("KnitPackages")["_Index"]["sleitnick_knit@1.7.0"].knit.Services.InventoryService.RE.updateInventory
+
+
+-- ✅ Nút bật tắt Auto Farm Quái (Fluent UI)
+Tabs.Farming:AddToggle("AutoFarmQuai", {
+    Title = "🧟 Auto Farm Quái ( Dang Fix Djtme)",
+    Default = false,
+    Callback = function(state)
+        AutoFarmGiangho = state
+        end
+})
+
+
+
+
+-- ⚙️ Biến toggle
+local AutoBangGac = false
+local CanUseBandage = true -- chống spam
+
+-- 🩹 Toggle bật tắt auto băng gạc
+Tabs.Farming:AddToggle("AutoBangGac", {
+    Title = "💉 Auto Băng Gạc (HP < 40)",
+    Default = false,
+    Callback = function(state)
+        AutoBangGac = state
+        Fluent:Notify({
+            Title = "💉 Auto Băng Gạc",
+            Content = state and "Đã bật tự hồi máu khi HP < 40." or "Đã tắt tự hồi máu.",
+            Duration = 3
+        })
+    end
+})
+
+-- 📦 Lấy lại băng gạc nếu mất
+local function GetBackpack(itemName)
+    local success, err = pcall(function()
+        local Knit = game:GetService("ReplicatedStorage"):WaitForChild("KnitPackages")
+            :WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.7.0")
+            :WaitForChild("knit")
+        local RE = Knit.Services.InventoryService.RE.updateInventory
+
+        RE:FireServer("refresh")
+        task.wait(1)
+        RE:FireServer("eue", itemName)
+    end)
+    if not success then
+        warn("❌ Lỗi khi lấy lại băng gạc:", err)
+    end
+end
+
+-- ❤️ Vòng lặp kiểm tra máu và tự dùng băng
+spawn(function()
+    while task.wait(1) do
+        if AutoBangGac and CanUseBandage then
+            local char = game.Players.LocalPlayer.Character
+            local humanoid = char and char:FindFirstChild("Humanoid")
+            local backpack = game.Players.LocalPlayer:FindFirstChild("Backpack")
+
+            if humanoid and humanoid.Health < 40 then
+                CanUseBandage = false -- khóa spam trong vài giây
+
+                -- Lấy băng nếu chưa có
+                if not backpack:FindFirstChild("băng gạc") then
+                    GetBackpack("băng gạc")
+                    task.wait(1.5)
+                end
+
+                -- Dùng băng gạc nếu có
+                if backpack:FindFirstChild("băng gạc") then
+                    local tool = backpack:FindFirstChild("băng gạc")
+                    pcall(function()
+                        tool.Parent = char
+                        task.wait(0.5)
+                        humanoid:EquipTool(tool)
+                        task.wait(0.5)
+                        tool:Activate()
+                    end)
+                end
+
+                -- Chờ cho hồi máu ít nhất lên 70 rồi mới cho dùng tiếp
+                repeat task.wait(1) until humanoid.Health > 70 or not AutoBangGac
+                task.wait(2)
+                CanUseBandage = true
+            end
+        end
+    end
+end)
+
+
+
+
+-- Tab Fps --
+local fpsLabel -- Để lưu label hiển thị FPS
+local fpsConnection -- Kết nối cập nhật FPS
+
+Tabs.Setting:AddToggle("ShowFPS", {
+    Title = "🎯 Hiện FPS",
+    Default = false,
+    Callback = function(state)
+        if state then
+            -- Tạo FPS Label
+            local gui = Instance.new("ScreenGui", game.CoreGui)
+            gui.Name = "FPSDisplay"
+
+            fpsLabel = Instance.new("TextLabel", gui)
+            fpsLabel.Size = UDim2.new(0, 100, 0, 30)
+            fpsLabel.Position = UDim2.new(1, -110, 0, 10)
+            fpsLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            fpsLabel.TextColor3 = Color3.new(1, 1, 1)
+            fpsLabel.TextSize = 18
+            fpsLabel.Text = "FPS: ..."
+            fpsLabel.BorderSizePixel = 0
+            fpsLabel.BackgroundTransparency = 0.2
+            fpsLabel.Font = Enum.Font.SourceSansBold
+
+            -- Hàm cập nhật FPS
+            local lastUpdate = tick()
+            local frames = 0
+
+            fpsConnection = game:GetService("RunService").RenderStepped:Connect(function()
+                frames += 1
+                local now = tick()
+                if now - lastUpdate >= 1 then
+                    local fps = math.floor(frames / (now - lastUpdate))
+                    fpsLabel.Text = "FPS: " .. fps
+                    lastUpdate = now
+                    frames = 0
+                end
+            end)
+        else
+            if fpsConnection then
+                fpsConnection:Disconnect()
+                fpsConnection = nil
+            end
+            if fpsLabel then
+                fpsLabel:Destroy()
+                fpsLabel = nil
+            end
+            local oldGui = game.CoreGui:FindFirstChild("FPSDisplay")
+            if oldGui then oldGui:Destroy() end
+        end
+    end
+})
+
+Tabs.Setting:AddButton({
+    Title = "⚡ Tăng FPS",
+    Description = "Giảm chất lượng đồ họa xuống mức thấp nhất",
+    Callback = function()
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        Fluent:Notify({
+            Title = "⚡ FPS Boost!",
+            Content = "Đã giảm chất lượng đồ họa xuống mức thấp nhất để tăng FPS.",
+            Duration = 4
+        })
+    end
+})
+
+Tabs.Setting:AddButton({
+    Title = "🖤 Màn Hình Trắng Đen",
+    Description = "Bật hiệu ứng trắng đen toàn màn hình (đen trắng retro)",
+    Callback = function()
+        local lighting = game:GetService("Lighting")
+
+        -- Kiểm tra nếu đã có effect rồi thì xóa
+        local oldEffect = lighting:FindFirstChild("TrắngĐen")
+        if oldEffect then
+            oldEffect:Destroy()
+            Fluent:Notify({
+                Title = "🌈 Màu Trở Lại!",
+                Content = "Đã tắt chế độ trắng đen.",
+                Duration = 3
+            })
+        else
+            -- Thêm effect mới
+            local cc = Instance.new("ColorCorrectionEffect")
+            cc.Name = "TrắngĐen"
+            cc.Saturation = -1
+            cc.Contrast = 0.1
+            cc.Brightness = 0
+            cc.Parent = lighting
+
+            Fluent:Notify({
+                Title = "🖤 Trắng Đen Đã Bật!",
+                Content = "Màn hình của bạn giờ là trắng đen toàn tập 😎",
+                Duration = 4
+            })
+        end
+    end
+})
+
+Tabs.Setting:AddButton({
+    Title = "✨ Bật RTX Flash BAng!",
+    Description = "Không Phú Hợp Cho Người Trốn Chơi Đêm",
+    Callback = function()
+        -- Làm part bóng
+        for _, part in pairs(workspace:GetDescendants()) do
+            if part:IsA("BasePart") and not part:IsA("Terrain") then
+                part.Material = Enum.Material.SmoothPlastic
+                part.Reflectance = 0.2
+                part.Transparency = 0
+            end
+        end
+
+        -- Hiệu ứng ánh sáng
+        local lighting = game:GetService("Lighting")
+        lighting.Brightness = 3
+        lighting.GlobalShadows = true
+        lighting.EnvironmentDiffuseScale = 1
+        lighting.EnvironmentSpecularScale = 1
+
+        local function createOnce(name, class, props)
+            if lighting:FindFirstChild(name) then lighting[name]:Destroy() end
+            local inst = Instance.new(class)
+            inst.Name = name
+            for prop, val in pairs(props) do inst[prop] = val end
+            inst.Parent = lighting
+        end
+
+        createOnce("RTX_Sun", "SunRaysEffect", {
+            Intensity = 0.15,
+            Spread = 0.2
+        })
+
+        createOnce("RTX_Bloom", "BloomEffect", {
+            Intensity = 1,
+            Size = 100,
+            Threshold = 0.9
+        })
+
+        createOnce("RTX_CC", "ColorCorrectionEffect", {
+            Saturation = 0.3,
+            Contrast = 0.2,
+            Brightness = 10
+        })
+
+        Fluent:Notify({
+            Title = "✨ RTX Flash Bang!",
+            Content = "Đeo Kính Vô Đi Bé 😎",
+            Duration = 5
+        })
+    end
+})
+
+
+Tabs.Setting:AddButton({
+    Title = "📶 Tối Ưu Ping",
+    Description = "Ẩn hiệu ứng + giảm tải mạng client",
+    Callback = function()
+        -- Tắt Light và ParticleEmitter
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Light") or v:IsA("Trail") then
+                v.Enabled = false
+            end
+        end
+
+        -- Tắt Shadows và giảm chất lượng Terrain (nếu có)
+        if workspace:FindFirstChildOfClass("Terrain") then
+            workspace.Terrain.WaterWaveSize = 0
+            workspace.Terrain.WaterReflectance = 0
+        end
+
+        settings().Rendering.ReloadAssets = true
+
+        Fluent:Notify({
+            Title = "📶 Ping Optimization",
+            Content = "Đã ẩn hiệu ứng và giảm tải để tối ưu ping.",
+            Duration = 4
+        })
+    end
+})
+
+Tabs.Setting:AddButton({
+    Title = "🧽 Xóa Tất Cả Hiệu Ứng",
+    Description = "Xóa sạch toàn bộ hiệu ứng ánh sáng, bloom, trắng đen, RTX, blur...",
+    Callback = function()
+        local lighting = game:GetService("Lighting")
+
+        for _, v in pairs(lighting:GetChildren()) do
+            if v:IsA("ColorCorrectionEffect")
+            or v:IsA("BloomEffect")
+            or v:IsA("SunRaysEffect")
+            or v:IsA("BlurEffect")
+            or v:IsA("DepthOfFieldEffect") then
+                v:Destroy()
+            end
+        end
+
+        Fluent:Notify({
+            Title = "🧹 Dọn Sạch Hiệu Ứng!",
+            Content = "Tất cả hiệu ứng hình ảnh đã bị xoá khỏi Lighting.",
+            Duration = 4
+        })
+    end
+})
+
+
+-- Tab Chơi Đồ
+Tabs.ChoiDo:AddButton({
+    Title = "✈️ Bay Bay",
+    Description = "Chạy script bay",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+    end
+})
+
+Tabs.ChoiDo:AddToggle("HitboxRucRo", {
+    Title = "🌟 Hitbox",
+    Default = false,
+    Callback = function(state)
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer then
+                local char = p.Character
+                if char then
+                    for _, partName in ipairs({ "Head", "HumanoidRootPart", "Torso" }) do
+                        local part = char:FindFirstChild(partName)
+                        if part and part:IsA("BasePart") then
+                            if state then
+                                part.Size = Vector3.new(15, 15, 15)
+                                part.Material = Enum.Material.SmoothPlastic
+                                part.Color = Color3.fromRGB(255, 255, 255)
+                                part.Transparency = 0.8
+                                part.Anchored = false
+                                part.CanCollide = false
+                            else
+                                part.Size = Vector3.new(2, 2, 1)
+                                part.Material = Enum.Material.Plastic
+                                part.Color = Color3.fromRGB(163, 162, 165)
+                                part.Transparency = 0
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+})
+
+local Lighting = game:GetService("Lighting")
+local RainbowEffect = false
+local RainbowBlur = nil
+local RainbowColor = nil
+
+Tabs.ChoiDo:AddToggle("ToggleRainbowEffect", {
+    Title = "🌈 Ảo giác cầu vồng",
+    Default = false,
+    Description = "Hiệu ứng 7 sắc cầu vồng trên màn hình"
+}):OnChanged(function(Value)
+    RainbowEffect = Value
+
+    if not Value then
+        -- Xoá hiệu ứng nếu có
+        if RainbowBlur then
+            RainbowBlur:Destroy()
+            RainbowBlur = nil
+        end
+        if RainbowColor then
+            RainbowColor:Destroy()
+            RainbowColor = nil
+        end
+    end
+end)
+
+-- Hiệu ứng đổi màu liên tục
+task.spawn(function()
+    local hue = 0
+    while true do
+        task.wait(0.1)
+
+        if RainbowEffect then
+            -- Tạo Blur nếu chưa có
+            if not RainbowBlur then
+                RainbowBlur = Instance.new("BlurEffect")
+                RainbowBlur.Size = 8 -- hoặc 12 tuỳ bạn
+                RainbowBlur.Name = "RainbowBlur"
+                RainbowBlur.Parent = Lighting
+            end
+
+            -- Tạo ColorCorrection nếu chưa có
+            if not RainbowColor then
+                RainbowColor = Instance.new("ColorCorrectionEffect")
+                RainbowColor.Name = "RainbowColor"
+                RainbowColor.Saturation = 1
+                RainbowColor.Contrast = 0.2
+                RainbowColor.Parent = Lighting
+            end
+
+            -- Đổi màu cầu vồng liên tục
+            hue = (hue + 3) % 360
+            local color = Color3.fromHSV(hue / 360, 1, 1)
+            RainbowColor.TintColor = color
+        end
+    end
+end)
+
+local Toggle3 = Tabs.Pvp:AddToggle("Script PvP", {
+    Title = "Script PvP",
+    Default = false 
+})
+
+Toggle3:OnChanged(function(Value)
+    if Value then
+        pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/newbiezlol/pvp/refs/heads/main/pvp.txt"))()
+        end)
+    end
+end)
+
+--// ========================== TIỆN ÍCH CHUNG ================================
+--- ANTI AFK 20 PHÚT
+spawn(function()
+	local vu = game:GetService("VirtualUser")
+	player.Idled:Connect(function()
+		vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera and workspace.CurrentCamera.CFrame or CFrame.new())
+		task.wait(1)
+		vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera and workspace.CurrentCamera.CFrame or CFrame.new())
+	end)
+end)
+
+---------------------------------------------------------------------------------------
+-- SERVICES
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local VIM = game:GetService("VirtualInputManager")
+local Rep = game:GetService("ReplicatedStorage")
+local WS = Workspace
+
+
+local FarmWoodTab = Tabs.FarmTien
+
+-- Bay tới cây bằng Tween
+local function flyToPosition(part, offset, speed)
+	local destination = part.Position + offset
+	local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if not (hrp and part) then return end
+
+	local distance = (hrp.Position - destination).Magnitude
+	local tweenTime = math.clamp(distance / speed, 0.3, 3)
+	local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Linear)
+	local goal = { CFrame = CFrame.new(destination) }
+	local tween = TweenService:Create(hrp, tweenInfo, goal)
+	tween:Play()
+	tween.Completed:Wait()
+end
+
+-- Equip Axe
+local toolName = "Rìu"
+local runningAxeLoop = false
+local function PurchaseAxe()
+	local invGui = player:WaitForChild("PlayerGui").Inventory.MainFrame.Container.Main.ToolList.ScrollingFrame
+	if not invGui:FindFirstChild(toolName) then
+		local shopService = Rep.KnitPackages._Index["sleitnick_knit@1.7.0"].knit.Services.ShopService.RE.buyItem
+		shopService:FireServer(toolName, 99)
+		task.wait(1)
+	end
+end
+local function RequestToolFromServer()
+	local invService = Rep.KnitPackages._Index["sleitnick_knit@1.7.0"].knit.Services.InventoryService.RE.updateInventory
+	invService:FireServer("eue", toolName)
+end
+local function CheckAndEquipAxe()
+	local char = player.Character
+	local backpack = player:FindFirstChild("Backpack")
+	local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+	if not (char and humanoid and backpack) then return end
+	local currentTool = char:FindFirstChildOfClass("Tool")
+	local axeInBackpack = backpack:FindFirstChild(toolName)
+	if (not currentTool or currentTool.Name ~= toolName) and not axeInBackpack then
+		RequestToolFromServer()
+		task.wait(0.5)
+		axeInBackpack = backpack:FindFirstChild(toolName)
+		if not axeInBackpack then
+			PurchaseAxe()
+			axeInBackpack = backpack:FindFirstChild(toolName)
+		end
+	end
+	if axeInBackpack then
+		humanoid:EquipTool(axeInBackpack)
+	end
+end
+local function StartAutoEquipLoop()
+	if runningAxeLoop then return end
+	runningAxeLoop = true
+	task.spawn(function()
+		while _G.AutoEquipAxe do
+			CheckAndEquipAxe()
+			task.wait(0.1)
+		end
+		runningAxeLoop = false
+	end)
+end
+
+-- Arrow minigame
+local rotationToKey = { [0]=Enum.KeyCode.Right, [90]=Enum.KeyCode.Down, [180]=Enum.KeyCode.Left, [270]=Enum.KeyCode.Up }
+local function normalizeRotation(rot)
+	return (math.floor((rot % 360) / 90 + 0.5) * 90) % 360
+end
+local function doArrowSequence()
+	local gui = player:WaitForChild("PlayerGui").ArrowMinigame.Arrow.List
+	for i = 1, 5 do
+		local frame = gui:FindFirstChild(tostring(i))
+		local img = frame
+ 
